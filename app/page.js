@@ -1,7 +1,18 @@
 import InputBox from "@/components/InputBox";
 import Image from "next/image";
+// import { PrismaClient } from "@prisma/client";
 
-export default function Home() {
+async function getTasks() {
+  const res = await fetch("http://localhost:3000/api/getTasks");
+  // console.log("res ", await res.json());
+
+  const data = res.json();
+  return data;
+}
+
+export default async function Home({ result }) {
+  const data = await getTasks();
+  console.log("data ", data);
   return (
     <main className="w-screen h-screen ">
       <div className="h-screen flex flex-col items-center ">
@@ -13,3 +24,15 @@ export default function Home() {
     </main>
   );
 }
+// export async function getServerSideProps() {
+//   const prisma = new PrismaClient();
+//   const result = await prisma.tasks.findMany();
+
+//   console.log("reuslt from prisma: ", result);
+
+//   return {
+//     props: {
+//       result,
+//     },
+//   };
+// }
