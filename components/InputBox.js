@@ -2,22 +2,34 @@
 
 import React, { useEffect, useRef, useState } from "react";
 
+// TODO: Design, User Login
 const InputBox = () => {
   const [task, setTask] = useState("");
   const [tasks, setTasks] = useState([]);
   const [taskFocused, setTaskFocused] = useState("");
   const [tasksDone, setTasksDone] = useState([]);
+  const [taskEdits, setTaskEdits] = useState({
+    currentTask: "",
+    editedTaskValue: "",
+  });
+  console.log("task ", task);
+  useEffect(() => {
+    getTasks();
+  }, []);
 
-  const addTask = (e) => {
+  // Tasks can be added by clicking the + button or pressing enter
+  const addTask = async (e) => {
     if (task === "") {
       return;
     }
 
     if (e === "click") {
       setTasks([...tasks, task]);
+      postTask();
       setTask("");
     } else if (e.key === "Enter") {
       setTasks([...tasks, task]);
+      postTask();
       setTask("");
     }
   };
@@ -26,6 +38,13 @@ const InputBox = () => {
     // console.log("index ", index);
     const newTasks = tasks.map((item, itemIndex) => {
       if (itemIndex === index) {
+        // console.log("current task ", tasks[index], "edited task ", value);
+        // await updateTask(tasks[index], value);
+        setTaskEdits({
+          currentTask: taskEdits.currentTask,
+          editedTaskValue: value,
+        });
+        console.log("task edits", taskEdits);
         return value;
       }
       return item;
@@ -34,24 +53,27 @@ const InputBox = () => {
     setTasks(newTasks);
   };
 
-  const taskDoneHandler = (taskDone) => {
+  const taskDoneHandler = async (taskDone) => {
     let newTasks = [...tasksDone];
     if (newTasks.includes(taskDone)) {
       newTasks.splice(newTasks.indexOf(taskDone), 1);
       // console.log("new tasks", newTasks);
+      postTaskDone(tasks[taskDone], false);
       console.log("removed: ", taskDone);
       setTasksDone(newTasks);
     } else {
+      postTaskDone(tasks[taskDone], true);
+      console.log("crossed: ", taskDone);
       setTasksDone([...tasksDone, taskDone]);
     }
 
-    console.log("tasks done");
+    console.log("tasks done, ", tasksDone);
     tasksDone.forEach((item) => console.log(item));
     console.log("````````");
   };
 
   // Rename to Task Interactions
-  const taskOptions = (e, value, index) => {
+  const taskOptions = async (e, value, index) => {
     console.log("save task", index);
     console.log("value", value);
     let newTasks = [];
@@ -62,9 +84,19 @@ const InputBox = () => {
       if (e === "empty") {
         newTasks = tasks.filter((task) => {
           if (task !== tasks[index]) {
+            console.log("Empty task ", task);
+            // Returns non empty tasks
             return task;
           }
-          console.log("task ", task, " tasksindex: ", index);
+          deleteTask(taskEdits.currentTask);
+          // console.log(
+          //   "task emptied",
+          //   taskEdits.currentTask,
+          //   " tasksindex: ",
+          //   index,
+          //   "task",
+          //   task
+          // );
         });
         setTasks(newTasks);
       } else if (e.key === "Enter") {
@@ -79,18 +111,119 @@ const InputBox = () => {
     }
 
     if (e === "delete") {
-      newTasks = tasks.filter((task) => {
+      newTasks = tasks.filter(async (task) => {
         if (task !== tasks[index]) {
           return task;
         }
+        await deleteTask(task);
         console.log("task ", task, " tasksindex: ", index);
       });
-      setTasks(newTasks);
+      // setTasks(newTasks);
+      // await getTasks();
     }
 
     console.log("newtasks", newTasks);
     console.log("tasks", tasks);
     return;
+  };
+
+  const getTasks = async (e) => {
+    // e.preventDefault;
+
+    const res = await fetch("/api/getTasks", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    });
+    const data = await res.json();
+    setTasks(data);
+    getTasksDone(data);
+  };
+
+  const getTasksDone = async (inputTasks) => {
+    // e.preventDefault;
+
+    const res = await fetch("/api/tasksDone", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    });
+    const data = await res.json();
+    // Match tasks retrieved to current indexes
+    console.log("DATA.MAP ", data);
+    let tasksDoneFromDb = data.map((item) => inputTasks.indexOf(item));
+    setTasksDone(tasksDoneFromDb);
+  };
+
+  const postTaskDone = async (inputTask, status) => {
+    // e.preventDefault;
+
+    const res = await fetch("/api/tasksDone", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: JSON.stringify({
+        task: inputTask,
+        taskStatus: status,
+      }),
+    });
+  };
+
+  console.log("tasks done", tasksDone);
+  const postTask = async () => {
+    const res = await fetch(`/api/postTasks`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: JSON.stringify({
+        task,
+        userEmail: "admin@email.com",
+      }),
+    });
+    // console.log("res ", await res.json());
+
+    const data = res.json();
+    console.log("Post Task, ", data);
+    return data;
+  };
+
+  const deleteTask = async (task) => {
+    const res = await fetch(`/api/delete/${task}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    });
+
+    const data = res.json();
+    console.log("Delete Task, ", data);
+    getTasks();
+    return data;
+  };
+
+  const updateTask = async (currentTask, editedTask) => {
+    const res = await fetch("/api/updateTask", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        currentTask,
+        editedTask,
+      }),
+    });
+    const data = res.json();
+    console.log("Updated Task, ", data);
+    // await getTasks();
   };
 
   return (
@@ -133,9 +266,20 @@ const InputBox = () => {
               }  ${tasksDone.includes(index) ? "line-through" : ""}`}
               value={task}
               onChange={(e) => editTask(e.target.value, index)}
-              onFocus={() => setTaskFocused(index)}
-              onBlur={(e) => {
+              onFocus={() => {
+                setTaskFocused(index);
+                setTaskEdits({ ...taskEdits, currentTask: task });
+                console.log("ON FOCUS", taskEdits);
+              }}
+              onBlur={async (e) => {
                 setTaskFocused("");
+                if (taskEdits.editedTaskValue !== "") {
+                  await updateTask(
+                    taskEdits.currentTask,
+                    taskEdits.editedTaskValue
+                  );
+                }
+                console.log("ON BLUR", taskEdits);
                 taskOptions("empty", task, index);
               }}
               onKeyDown={(e) => taskOptions(e, task, index)}
@@ -184,7 +328,7 @@ const InputBox = () => {
             {/* Delete Button */}
             <button
               className="bg-red-600 rounded-md w-fit p-2  text-white"
-              onClick={() => taskOptions("delete", task, index)}
+              onClick={() => taskOptions("delete", task.task, index)}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

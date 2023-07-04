@@ -3,7 +3,17 @@ import Image from "next/image";
 // import { PrismaClient } from "@prisma/client";
 
 async function getTasks() {
-  const res = await fetch("http://localhost:3000/api/getTasks");
+  const res = await fetch(`${process.env.BACKEND_URL}/api/getTasks`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      // 'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: JSON.stringify({
+      task: "test task1",
+      userEmail: "admin@email.com",
+    }),
+  });
   // console.log("res ", await res.json());
 
   const data = res.json();
@@ -12,7 +22,7 @@ async function getTasks() {
 
 export default async function Home({ result }) {
   const data = await getTasks();
-  console.log("data ", data);
+  // console.log("data ", data);
   return (
     <main className="w-screen h-screen ">
       <div className="h-screen flex flex-col items-center ">
