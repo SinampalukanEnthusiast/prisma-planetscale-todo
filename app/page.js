@@ -2,27 +2,7 @@ import InputBox from "@/components/InputBox";
 import Image from "next/image";
 // import { PrismaClient } from "@prisma/client";
 
-async function getTasks() {
-  const res = await fetch(`${process.env.BACKEND_URL}/api/getTasks`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      // 'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: JSON.stringify({
-      task: "test task1",
-      userEmail: "admin@email.com",
-    }),
-  });
-  // console.log("res ", await res.json());
-
-  const data = res.json();
-  return data;
-}
-
-export default async function Home({ result }) {
-  const data = await getTasks();
-  // console.log("data ", data);
+export default async function Home() {
   return (
     <main className="w-screen h-screen ">
       <div className="h-screen flex flex-col items-center ">
@@ -34,15 +14,3 @@ export default async function Home({ result }) {
     </main>
   );
 }
-// export async function getServerSideProps() {
-//   const prisma = new PrismaClient();
-//   const result = await prisma.tasks.findMany();
-
-//   console.log("reuslt from prisma: ", result);
-
-//   return {
-//     props: {
-//       result,
-//     },
-//   };
-// }
