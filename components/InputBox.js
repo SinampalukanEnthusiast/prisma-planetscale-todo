@@ -12,7 +12,6 @@ const InputBox = () => {
     currentTask: "",
     editedTaskValue: "",
   });
-  console.log("task ", task);
   useEffect(() => {
     getTasks();
   }, []);
@@ -44,7 +43,7 @@ const InputBox = () => {
           currentTask: taskEdits.currentTask,
           editedTaskValue: value,
         });
-        console.log("task edits", taskEdits);
+        // console.log("task edits", taskEdits);
         return value;
       }
       return item;
@@ -59,44 +58,33 @@ const InputBox = () => {
       newTasks.splice(newTasks.indexOf(taskDone), 1);
       // console.log("new tasks", newTasks);
       postTaskDone(tasks[taskDone], false);
-      console.log("removed: ", taskDone);
+      // console.log("removed: ", taskDone);
       setTasksDone(newTasks);
     } else {
       postTaskDone(tasks[taskDone], true);
-      console.log("crossed: ", taskDone);
+      // console.log("crossed: ", taskDone);
       setTasksDone([...tasksDone, taskDone]);
     }
 
-    console.log("tasks done, ", tasksDone);
-    tasksDone.forEach((item) => console.log(item));
-    console.log("````````");
+    // console.log("tasks done, ", tasksDone);
+    // tasksDone.forEach((item) => console.log(item));
+    // console.log("````````");
   };
 
   // Rename to Task Interactions
   const taskOptions = async (e, value, index) => {
-    console.log("save task", index);
-    console.log("value", value);
     let newTasks = [];
     if (e.key === "Enter") {
-      console.log("enter pressed");
     }
     if (value === "") {
       if (e === "empty") {
         newTasks = tasks.filter((task) => {
           if (task !== tasks[index]) {
-            console.log("Empty task ", task);
+            // console.log("Empty task ", task);
             // Returns non empty tasks
             return task;
           }
           deleteTask(taskEdits.currentTask);
-          // console.log(
-          //   "task emptied",
-          //   taskEdits.currentTask,
-          //   " tasksindex: ",
-          //   index,
-          //   "task",
-          //   task
-          // );
         });
         setTasks(newTasks);
       } else if (e.key === "Enter") {
@@ -104,26 +92,24 @@ const InputBox = () => {
           if (task !== tasks[index]) {
             return task;
           }
-          console.log("task ", task, " tasksindex: ", index);
+          deleteTask(taskEdits.currentTask);
+          // console.log("task ", task, " tasksindex: ", index);
         });
         setTasks(newTasks);
       }
     }
 
     if (e === "delete") {
-      newTasks = tasks.filter(async (task) => {
+      newTasks = tasks.filter((task) => {
         if (task !== tasks[index]) {
           return task;
         }
-        await deleteTask(task);
-        console.log("task ", task, " tasksindex: ", index);
+        deleteTask(task);
       });
-      // setTasks(newTasks);
+      setTasks(newTasks);
       // await getTasks();
     }
 
-    console.log("newtasks", newTasks);
-    console.log("tasks", tasks);
     return;
   };
 
@@ -154,7 +140,7 @@ const InputBox = () => {
     });
     const data = await res.json();
     // Match tasks retrieved to current indexes
-    console.log("DATA.MAP ", data);
+    // console.log("DATA.MAP ", data);
     let tasksDoneFromDb = data.map((item) => inputTasks.indexOf(item));
     setTasksDone(tasksDoneFromDb);
   };
@@ -175,7 +161,7 @@ const InputBox = () => {
     });
   };
 
-  console.log("tasks done", tasksDone);
+  // console.log("tasks done", tasksDone);
   const postTask = async () => {
     const res = await fetch(`/api/postTasks`, {
       method: "POST",
@@ -191,7 +177,7 @@ const InputBox = () => {
     // console.log("res ", await res.json());
 
     const data = res.json();
-    console.log("Post Task, ", data);
+    // console.log("Post Task, ", data);
     return data;
   };
 
@@ -205,7 +191,7 @@ const InputBox = () => {
     });
 
     const data = res.json();
-    console.log("Delete Task, ", data);
+    // console.log("Delete Task, ", data);
     getTasks();
     return data;
   };
@@ -222,13 +208,13 @@ const InputBox = () => {
       }),
     });
     const data = res.json();
-    console.log("Updated Task, ", data);
+    // console.log("Updated Task, ", data);
     // await getTasks();
   };
 
   return (
-    <div className="flex flex-col h-screen gap-10">
-      <div className="flex gap-2 justify-between">
+    <div className="flex flex-col h-screen gap-10 w-fit drop-shadow-xl">
+      <div className="flex gap-2 justify-between ">
         <input
           type="text"
           className="border rounded-md px-2 w-full"
@@ -256,20 +242,22 @@ const InputBox = () => {
           </svg>
         </button>
       </div>
-      <div className="flex flex-col gap-5 text-blue-500">
+      <div className="flex flex-col gap-5 text-blue-500 justify-center items-center">
         {tasks.map((task, index) => (
-          <div className="inline-flex gap-2" key={index}>
+          <div className="inline-flex gap-2 p-2" key={index}>
             <input
               type="text"
-              className={`rounded-md px-2 ${
-                index === taskFocused ? "  outline-none border-l-4 " : ""
+              className={`rounded-md px-2 hover:border-b-4 ${
+                index === taskFocused
+                  ? "  outline-none border-l-4 border-b-4"
+                  : ""
               }  ${tasksDone.includes(index) ? "line-through" : ""}`}
               value={task}
               onChange={(e) => editTask(e.target.value, index)}
               onFocus={() => {
                 setTaskFocused(index);
                 setTaskEdits({ ...taskEdits, currentTask: task });
-                console.log("ON FOCUS", taskEdits);
+                // console.log("ON FOCUS", taskEdits);
               }}
               onBlur={async (e) => {
                 setTaskFocused("");
@@ -279,35 +267,13 @@ const InputBox = () => {
                     taskEdits.editedTaskValue
                   );
                 }
-                console.log("ON BLUR", taskEdits);
+                // console.log("ON BLUR", taskEdits);
                 taskOptions("empty", task, index);
               }}
               onKeyDown={(e) => taskOptions(e, task, index)}
             />
-            {/* 
-            Gray Edit
             <button
-              className="bg-gray-600 rounded-md w-fit p-2  text-white"
-              onClick={() => taskOptions("click", task, index)}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"
-                />
-              </svg>
-            </button> */}
-            {/* Task Done Button */}
-            <button
-              className="bg-green-600 rounded-md w-fit p-2  text-white"
+              className="bg-green-600 rounded-md w-100 h-100 p-2 hover:bg-green-700 text-white"
               onClick={() => taskDoneHandler(index)}
             >
               <svg
@@ -327,7 +293,7 @@ const InputBox = () => {
             </button>
             {/* Delete Button */}
             <button
-              className="bg-red-600 rounded-md w-fit p-2  text-white"
+              className="bg-red-600 rounded-md w-fit p-2  hover:bg-red-800 text-white"
               onClick={() => taskOptions("delete", task.task, index)}
             >
               <svg

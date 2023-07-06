@@ -1,6 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/db";
 
 export default async function handler(req, res) {
   const { task, taskStatus } = req.body;
@@ -17,7 +15,7 @@ export default async function handler(req, res) {
       // select: { taskStatus },
     });
     result = result.map((item) => item.task);
-    console.log("S: GET tasks done", result);
+    // console.log("S: GET tasks done", result);
     res.json(result);
   }
   if (method === "PATCH") {
@@ -30,7 +28,7 @@ export default async function handler(req, res) {
       // select: { taskStatus },
     });
     // result = result.map((item) => item.task);
-    console.log("S: PATCH tasks done", result);
+    // console.log("S: PATCH tasks done", result);
     res.json(result);
   }
 }
